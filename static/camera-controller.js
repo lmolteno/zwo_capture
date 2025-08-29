@@ -94,9 +94,17 @@ class CameraController {
       const statusResponse = await fetch("/camera/status");
       const status = await statusResponse.json();
       this.cameraModel = status.camera_model;
-      this.updateUI(status.is_capturing, status.is_connected, status.camera_model);
+      this.updateUI(
+        status.is_capturing,
+        status.is_connected,
+        status.camera_model,
+      );
       this.updateFPS(status.current_fps);
-      this.updateRecordingStatus(status.is_recording, status.frames_recorded, status.recording_directory);
+      this.updateRecordingStatus(
+        status.is_recording,
+        status.frames_recorded,
+        status.recording_directory,
+      );
     } catch (error) {
       console.error("Error loading settings:", error);
     }
@@ -297,14 +305,14 @@ class CameraController {
       startRecordBtn.disabled = true;
       stopRecordBtn.disabled = true;
     }
-    
+
     this.updateCameraInfo(connected, cameraModel);
   }
 
   updateCameraInfo(connected, cameraModel) {
     const cameraInfo = document.getElementById("cameraInfo");
     const cameraName = document.getElementById("cameraName");
-    
+
     if (connected && cameraModel !== "Unknown") {
       cameraName.textContent = `📷 ${cameraModel}`;
       cameraInfo.className = "camera-info connected";
@@ -366,12 +374,16 @@ class CameraController {
     }
   }
 
-  updateRecordingStatus(isRecording, framesRecorded = 0, recordingDirectory = null) {
+  updateRecordingStatus(
+    isRecording,
+    framesRecorded = 0,
+    recordingDirectory = null,
+  ) {
     const recordingInfo = document.getElementById("recordingInfo");
     const recordingStatus = document.getElementById("recordingStatus");
-    
+
     this.isRecording = isRecording;
-    
+
     if (isRecording) {
       recordingInfo.textContent = `Recording: ${framesRecorded} frames`;
       recordingStatus.className = "recording-status recording";
@@ -595,9 +607,17 @@ class CameraController {
         if (statusResponse.ok) {
           const status = await statusResponse.json();
           this.cameraModel = status.camera_model;
-          this.updateUI(status.is_capturing, status.is_connected, status.camera_model);
+          this.updateUI(
+            status.is_capturing,
+            status.is_connected,
+            status.camera_model,
+          );
           this.updateFPS(status.current_fps);
-          this.updateRecordingStatus(status.is_recording, status.frames_recorded, status.recording_directory);
+          this.updateRecordingStatus(
+            status.is_recording,
+            status.frames_recorded,
+            status.recording_directory,
+          );
         }
       } catch (error) {
         console.error("Error refreshing settings:", error);
@@ -720,6 +740,128 @@ class CameraController {
     // Update the settings panel image
     const roiImage = document.getElementById("roiSettingsImage");
     roiImage.src = canvas.toDataURL("image/png");
+
+    // Setup dragging on the settings overlay if not already done
+    this.setupROISettingsDrag();
+  }
+
+  setupROISettingsDrag() {
+    const overlay = document.getElementById("roiSettingsOverlay");
+
+    // Remove existing event listeners to avoid duplicates
+    overlay.onmousedown = null;
+    overlay.onmousemove = null;
+    overlay.onmouseup = null;
+    overlay.ontouchstart = null;
+    overlay.ontouchmove = null;
+    overlay.ontouchend = null;
+
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let originalROI = null;
+
+    const getOverlayCoordinates = (event) => {
+      const rect = overlay.getBoundingClientRect();
+      const clientX =
+        event.clientX || (event.touches && event.touches[0].clientX);
+      const clientY =
+        event.clientY || (event.touches && event.touches[0].clientY);
+      return {
+        x: (clientX - rect.left) / rect.width,
+        y: (clientY - rect.top) / rect.height,
+      };
+    };
+
+    const isInsideROI = (x, y) => {
+      return (
+        x >= this.currentROI.x &&
+        x <= this.currentROI.x + this.currentROI.width &&
+        y >= this.currentROI.y &&
+        y <= this.currentROI.y + this.currentROI.height
+      );
+    };
+
+    const startDrag = (event) => {
+      const coords = getOverlayCoordinates(event);
+
+      // Only start dragging if clicking inside the ROI and ROI is not full image
+      if (this.currentROI.width < 1 || this.currentROI.height < 1) {
+        if (isInsideROI(coords.x, coords.y)) {
+          isDragging = true;
+          dragStartX = coords.x;
+          dragStartY = coords.y;
+          originalROI = { ...this.currentROI };
+          overlay.style.cursor = "move";
+          event.preventDefault();
+        }
+      }
+    };
+
+    const doDrag = (event) => {
+      if (!isDragging) return;
+
+      const coords = getOverlayCoordinates(event);
+      const deltaX = coords.x - dragStartX;
+      const deltaY = coords.y - dragStartY;
+
+      // Calculate new position
+      let newX = originalROI.x + deltaX;
+      let newY = originalROI.y + deltaY;
+
+      // Constrain to bounds
+      newX = Math.max(0, Math.min(1 - this.currentROI.width, newX));
+      newY = Math.max(0, Math.min(1 - this.currentROI.height, newY));
+
+      // Update ROI position
+      this.currentROI.x = newX;
+      this.currentROI.y = newY;
+
+      // Update displays
+      // this.updateROIDisplay();
+      this.updateROISettingsPreview();
+
+      event.preventDefault();
+    };
+
+    const endDrag = (event) => {
+      if (isDragging) {
+        isDragging = false;
+        this.updateSettings();
+        overlay.style.cursor = "default";
+        event.preventDefault();
+      }
+    };
+
+    // Add hover effect
+    const onHover = (event) => {
+      if (!isDragging) {
+        const coords = getOverlayCoordinates(event);
+        if (this.currentROI.width < 1 || this.currentROI.height < 1) {
+          if (isInsideROI(coords.x, coords.y)) {
+            overlay.style.cursor = "move";
+          } else {
+            overlay.style.cursor = "default";
+          }
+        } else {
+          overlay.style.cursor = "default";
+        }
+      }
+    };
+
+    // Mouse events
+    overlay.addEventListener("mousedown", startDrag);
+    overlay.addEventListener("mousemove", (event) => {
+      doDrag(event);
+      onHover(event);
+    });
+    overlay.addEventListener("mouseup", endDrag);
+    overlay.addEventListener("mouseleave", endDrag);
+
+    // Touch events
+    overlay.addEventListener("touchstart", startDrag);
+    overlay.addEventListener("touchmove", doDrag);
+    overlay.addEventListener("touchend", endDrag);
   }
 }
 
@@ -731,10 +873,13 @@ class ROISelector {
     this.onROIChange = onROIChange;
 
     this.isSelecting = false;
+    this.isDragging = false;
+    this.dragMode = null; // 'create', 'move', 'resize'
     this.startX = 0;
     this.startY = 0;
     this.currentX = 0;
     this.currentY = 0;
+    this.dragStartROI = null; // Store original ROI when dragging starts
 
     this.roi = { x: 0, y: 0, width: 1, height: 1 }; // Default to full image
 
@@ -810,6 +955,35 @@ class ROISelector {
       x: (event.clientX - rect.left) / rect.width,
       y: (event.clientY - rect.top) / rect.height,
     };
+  }
+
+  isInsideROI(x, y) {
+    return (
+      x >= this.roi.x &&
+      x <= this.roi.x + this.roi.width &&
+      y >= this.roi.y &&
+      y <= this.roi.y + this.roi.height
+    );
+  }
+
+  getDragMode(x, y) {
+    // If no ROI set, create new one
+    if (
+      this.roi.width === 1 &&
+      this.roi.height === 1 &&
+      this.roi.x === 0 &&
+      this.roi.y === 0
+    ) {
+      return "create";
+    }
+
+    // Check if click is inside existing ROI (for dragging)
+    if (this.isInsideROI(x, y)) {
+      return "move";
+    }
+
+    // Otherwise, create new ROI
+    return "create";
   }
 
   startSelection(event) {

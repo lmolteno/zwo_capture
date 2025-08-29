@@ -318,7 +318,7 @@ class CameraManager:
                 current_time = time.time()
 
                 # Check connection every 5 seconds
-                if current_time - self.last_connection_check > 5.0:
+                if current_time - self.last_connection_check > 1.0:
                     self.last_connection_check = current_time
 
                     if self.is_connected:
@@ -333,11 +333,11 @@ class CameraManager:
                             print("Camera reconnected successfully!")
 
                 # Sleep for 1 second before next check
-                self.connection_check_event.wait(1.0)
+                self.connection_check_event.wait(0.5)
 
             except Exception as e:
                 print(f"Error in connection monitor: {e}")
-                self.connection_check_event.wait(1.0)
+                self.connection_check_event.wait(0.5)
 
     def start_capture(self):
         """Start continuous frame capture"""
