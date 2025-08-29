@@ -1,94 +1,195 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZWO ASI Camera Controller</title>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🔭 ZWO ASI Camera Controller</h1>
-            <div id="cameraStatus" class="status stopped">Camera Stopped</div>
-        </div>
-        
-        <div class="main-content">
-            <div class="preview-section">
-                <div class="preview-container">
-                    <img id="cameraPreview" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjMwMCIgeT0iMjAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM2Yzc1N2QiPkNhbWVyYSBQcmV2aWV3PC90ZXh0Pjwvc3ZnPg==" alt="Camera Preview">
-                </div>
-                
-                <div class="capture-controls">
-                    <button id="startBtn" class="btn btn-start">▶️ Start Capture</button>
-                    <button id="stopBtn" class="btn btn-stop" disabled>⏹️ Stop Capture</button>
-                </div>
-                
-                <div class="histogram-container">
-                    <h3>📊 Live Histogram</h3>
-                    <canvas id="histogramCanvas" width="800" height="200"></canvas>
-                    <div class="histogram-legend" id="histogramLegend"></div>
-                </div>
-            </div>
-            
-            <div class="controls-section">
-                <div class="settings-group">
-                    <h3>⚙️ Camera Settings</h3>
-                    
-                    <div class="slider-group">
-                        <label for="exposureSlider">Exposure</label>
-                        <div class="slider-container">
-                            <input type="range" id="exposureSlider" class="slider" min="0" max="100" value="50">
-                        </div>
-                        <input type="text" class="slider-value-input" id="exposureInput" placeholder="e.g. 10ms, 500μs, 2.5s">
-                        <div class="slider-labels">
-                            <span>1μs</span>
-                            <span>5.0s</span>
-                        </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>ZWO ASI Camera Controller</title>
+        <link rel="stylesheet" href="/static/styles.css" />
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🔭 ZWO ASI Camera Controller</h1>
+                <div class="status-panel">
+                    <div id="cameraStatus" class="status stopped">
+                        Camera Stopped
                     </div>
-                    
-                    <div class="slider-group">
-                        <label for="gainSlider">Gain</label>
-                        <div class="slider-container">
-                            <input type="range" id="gainSlider" class="slider" min="0" max="100" value="17">
-                        </div>
-                        <input type="number" class="slider-value-input" id="gainInput" min="0" max="600" placeholder="0-600">
-                        <div class="slider-labels">
-                            <span>0</span>
-                            <span>600</span>
-                        </div>
+                    <div id="cameraInfo" class="camera-info">
+                        <span id="cameraName">No Camera Connected</span>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="binning">Binning</label>
-                        <select id="binning">
-                            <option value="1">1x1 (Full Resolution)</option>
-                            <option value="2">2x2 (Quarter Resolution)</option>
-                            <option value="4">4x4 (1/16 Resolution)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="format">Image Format</label>
-                        <select id="format">
-                            <option value="raw8">RAW 8-bit (Mono)</option>
-                            <option value="raw16">RAW 16-bit (Mono)</option>
-                            <option value="rgb24">RGB 24-bit (Color)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="bandwidth">USB Bandwidth</label>
-                        <select id="bandwidth">
-                            <option value="max">Maximum (Speed)</option>
-                            <option value="min">Minimum (Stability)</option>
-                        </select>
+                    <div id="fpsDisplay" class="fps-display">
+                        📊 FPS: <span id="fpsValue">0.0</span>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <script src="/static/camera-controller.js"></script>
-</body>
+            <div class="main-content">
+                <div class="preview-section">
+                    <div class="preview-container">
+                        <div class="preview-wrapper">
+                            <img
+                                id="cameraPreview"
+                                src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjMwMCIgeT0iMjAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM2Yzc1N2QiPkNhbWVyYSBQcmV2aWV3PC90ZXh0Pjwvc3ZnPg=="
+                                alt="Camera Preview"
+                            />
+                            <canvas
+                                id="roiOverlay"
+                                class="roi-overlay"
+                            ></canvas>
+                        </div>
+                    </div>
+
+                    <div class="capture-controls">
+                        <button id="startBtn" class="btn btn-start">
+                            ▶️ Start Capture
+                        </button>
+                        <button id="stopBtn" class="btn btn-stop" disabled>
+                            ⏹️ Stop Capture
+                        </button>
+                    </div>
+
+                    <div class="recording-controls">
+                        <button id="startRecordBtn" class="btn btn-record" disabled>
+                            🔴 Start Recording
+                        </button>
+                        <button id="stopRecordBtn" class="btn btn-record-stop" disabled>
+                            ⏺️ Stop Recording
+                        </button>
+                        <div id="recordingStatus" class="recording-status">
+                            <span id="recordingInfo">Not Recording</span>
+                        </div>
+                    </div>
+
+                    <div class="histogram-container">
+                        <h3>📊 Live Histogram</h3>
+                        <canvas
+                            id="histogramCanvas"
+                            width="800"
+                            height="200"
+                        ></canvas>
+                        <div
+                            class="histogram-legend"
+                            id="histogramLegend"
+                        ></div>
+                    </div>
+                </div>
+
+                <div class="controls-section">
+                    <div class="settings-group">
+                        <h3>⚙️ Camera Settings</h3>
+
+                        <div class="slider-group">
+                            <label for="exposureSlider">Exposure</label>
+                            <div class="slider-container">
+                                <input
+                                    type="range"
+                                    id="exposureSlider"
+                                    class="slider"
+                                    min="0"
+                                    max="100"
+                                    value="50"
+                                />
+                            </div>
+                            <input
+                                type="text"
+                                class="slider-value-input"
+                                id="exposureInput"
+                                placeholder="e.g. 10ms, 500μs, 2.5s"
+                            />
+                            <div class="slider-labels">
+                                <span>1μs</span>
+                                <span>5.0s</span>
+                            </div>
+                        </div>
+
+                        <div class="slider-group">
+                            <label for="gainSlider">Gain</label>
+                            <div class="slider-container">
+                                <input
+                                    type="range"
+                                    id="gainSlider"
+                                    class="slider"
+                                    min="0"
+                                    max="100"
+                                    value="17"
+                                />
+                            </div>
+                            <input
+                                type="number"
+                                class="slider-value-input"
+                                id="gainInput"
+                                min="0"
+                                max="600"
+                                placeholder="0-600"
+                            />
+                            <div class="slider-labels">
+                                <span>0</span>
+                                <span>600</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="binning">Binning</label>
+                            <select id="binning">
+                                <option value="1">1x1 (Full Resolution)</option>
+                                <option value="2">
+                                    2x2 (Quarter Resolution)
+                                </option>
+                                <option value="4">4x4 (1/16 Resolution)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="format">Image Format</label>
+                            <select id="format">
+                                <option value="raw8">RAW 8-bit (Mono)</option>
+                                <option value="raw16">RAW 16-bit (Mono)</option>
+                                <option value="rgb24">
+                                    RGB 24-bit (Color)
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bandwidth">USB Bandwidth</label>
+                            <select id="bandwidth">
+                                <option value="max">Maximum (Speed)</option>
+                                <option value="min">Minimum (Stability)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <h3>🎯 Region of Interest</h3>
+                        
+                        <div class="roi-preview-container">
+                            <div class="roi-mini-display">
+                                <img id="roiSettingsImage" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEzMyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEzMyIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjEwMCIgeT0iNzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZjNzU3ZCI+Um9vdCBTZWxlY3Rpb248L3RleHQ+PC9zdmc+" alt="ROI Selection">
+                                <canvas id="roiSettingsOverlay" class="roi-settings-overlay"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="roi-info">
+                            <div class="roi-coords">
+                                <div class="roi-coord-item">
+                                    <span class="roi-label">Position:</span>
+                                    <span id="roiPosition">0, 0</span>
+                                </div>
+                                <div class="roi-coord-item">
+                                    <span class="roi-label">Size:</span>
+                                    <span id="roiSize">Full Image</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="roi-controls">
+                            <button id="resetROIBtn" class="btn btn-secondary">Reset to Full Image</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="/static/camera-controller.js"></script>
+    </body>
 </html>
