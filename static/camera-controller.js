@@ -7,6 +7,7 @@ class CameraController {
     this.settingsRefreshInterval = null;
     this.roiSelector = null;
     this.currentROI = { x: 0, y: 0, width: 1, height: 1 }; // Normalized coordinates (0-1)
+    this.scheduleRefreshInterval = null;
     this.init();
   }
 
@@ -16,6 +17,7 @@ class CameraController {
     this.startSettingsRefresh();
     this.initROISelector();
     this.updateROISettingsPreview(); // Initialize ROI preview
+    this.initScheduling();
   }
 
   bindEvents() {
@@ -76,7 +78,7 @@ class CameraController {
     });
 
     // Other settings change events
-    const settingsInputs = ["binning", "format", "bandwidth"];
+    const settingsInputs = ["binning", "format", "bandwidth", "maxRecordingFps"];
     settingsInputs.forEach((id) => {
       const element = document.getElementById(id);
       element.addEventListener("change", () => this.updateSettings());
@@ -119,6 +121,7 @@ class CameraController {
     document.getElementById("binning").value = settings.binning;
     document.getElementById("format").value = settings.format;
     document.getElementById("bandwidth").value = settings.bandwidth;
+    document.getElementById("maxRecordingFps").value = settings.max_recording_fps || 30;
   }
 
   // Logarithmic exposure conversion functions
@@ -561,6 +564,7 @@ class CameraController {
       roi_y: this.currentROI.y,
       roi_width: this.currentROI.width,
       roi_height: this.currentROI.height,
+      max_recording_fps: parseFloat(document.getElementById("maxRecordingFps").value),
     };
 
     this.updateROIDisplay();
@@ -633,6 +637,7 @@ class CameraController {
       clearInterval(this.settingsRefreshInterval);
       this.settingsRefreshInterval = null;
     }
+    this.stopScheduleRefresh();
   }
 
   initROISelector() {
@@ -651,6 +656,14 @@ class CameraController {
     document.getElementById("resetROIBtn").addEventListener("click", () => {
       this.roiSelector.resetROI();
     });
+
+    // Schedule control buttons
+    document
+      .getElementById("createScheduleBtn")
+      .addEventListener("click", () => this.createSchedule());
+    document
+      .getElementById("refreshSchedulesBtn")  
+      .addEventListener("click", () => this.loadSchedules());
   }
 
   updateROIDisplay() {
@@ -862,6 +875,233 @@ class CameraController {
     overlay.addEventListener("touchstart", startDrag);
     overlay.addEventListener("touchmove", doDrag);
     overlay.addEventListener("touchend", endDrag);
+  }
+
+  // Scheduling Methods
+  initScheduling() {
+    // Set default datetime values (30 minutes from now, 2 hours duration)
+    const now = new Date();
+    const startTime = new Date(now.getTime() + 30 * 60000); // 30 minutes from now
+    const endTime = new Date(startTime.getTime() + 2 * 60 * 60000); // 2 hours later
+    
+    document.getElementById("startDateTime").value = this.formatDateTimeLocal(startTime);
+    document.getElementById("endDateTime").value = this.formatDateTimeLocal(endTime);
+    
+    // Load existing schedules
+    this.loadSchedules();
+    this.loadScheduleStatus();
+    
+    // Start periodic refresh
+    this.startScheduleRefresh();
+  }
+
+  formatDateTimeLocal(date) {
+    // Format date for datetime-local input (YYYY-MM-DDTHH:MM)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  formatDateTimeDisplay(isoString) {
+    // Format ISO datetime for display
+    const date = new Date(isoString);
+    return date.toLocaleString();
+  }
+
+  async createSchedule() {
+    try {
+      const name = document.getElementById("scheduleName").value.trim();
+      const description = document.getElementById("scheduleDescription").value.trim();
+      const startTime = document.getElementById("startDateTime").value;
+      const endTime = document.getElementById("endDateTime").value;
+
+      if (!name) {
+        alert("Please enter a session name");
+        return;
+      }
+
+      if (!startTime || !endTime) {
+        alert("Please select start and end times");
+        return;
+      }
+
+      // Convert to ISO format for API
+      const startISO = new Date(startTime).toISOString().slice(0, 19);
+      const endISO = new Date(endTime).toISOString().slice(0, 19);
+
+      const schedule = {
+        name: name,
+        start_time: startISO,
+        end_time: endISO,
+        description: description || null
+      };
+
+      const response = await fetch("/schedule/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(schedule),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Schedule "${name}" created successfully!`);
+        
+        // Clear form
+        document.getElementById("scheduleName").value = "";
+        document.getElementById("scheduleDescription").value = "";
+        
+        // Refresh list
+        this.loadSchedules();
+        this.loadScheduleStatus();
+      } else {
+        const error = await response.json();
+        alert(`Failed to create schedule: ${error.detail}`);
+      }
+    } catch (error) {
+      console.error("Error creating schedule:", error);
+      alert("Error creating schedule");
+    }
+  }
+
+  async loadSchedules() {
+    try {
+      const response = await fetch("/schedule/list");
+      if (response.ok) {
+        const data = await response.json();
+        this.displaySchedules(data.schedules);
+      } else {
+        console.error("Failed to load schedules");
+      }
+    } catch (error) {
+      console.error("Error loading schedules:", error);
+    }
+  }
+
+  displaySchedules(schedules) {
+    const container = document.getElementById("schedulesList");
+    
+    if (!schedules || schedules.length === 0) {
+      container.innerHTML = '<p class="no-schedules">No scheduled captures</p>';
+      return;
+    }
+
+    let html = '';
+    schedules.forEach(schedule => {
+      const statusClass = `status-${schedule.status}`;
+      const startTime = this.formatDateTimeDisplay(schedule.start_time);
+      const endTime = this.formatDateTimeDisplay(schedule.end_time);
+      
+      html += `
+        <div class="schedule-item ${statusClass}">
+          <div class="schedule-header">
+            <h5 class="schedule-name">${schedule.name}</h5>
+            <span class="schedule-status">${schedule.status.toUpperCase()}</span>
+          </div>
+          <div class="schedule-details">
+            <div class="schedule-time">
+              <strong>Start:</strong> ${startTime}
+            </div>
+            <div class="schedule-time">
+              <strong>End:</strong> ${endTime}
+            </div>
+            ${schedule.description ? `<div class="schedule-description">${schedule.description}</div>` : ''}
+            <div class="schedule-info">
+              <span>Frames: ${schedule.frames_captured || 0}</span>
+              ${schedule.started_at ? `<span>Started: ${this.formatDateTimeDisplay(schedule.started_at)}</span>` : ''}
+            </div>
+          </div>
+          <div class="schedule-actions">
+            ${schedule.status === 'pending' || schedule.status === 'active' ? 
+              `<button class="btn btn-danger btn-small" onclick="cameraController.cancelSchedule(${schedule.id})">Cancel</button>` : 
+              ''}
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  async cancelSchedule(scheduleId) {
+    if (!confirm("Are you sure you want to cancel this scheduled capture?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/schedule/${scheduleId}`, {
+        method: "DELETE"
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message);
+        this.loadSchedules();
+        this.loadScheduleStatus();
+      } else {
+        const error = await response.json();
+        alert(`Failed to cancel schedule: ${error.detail}`);
+      }
+    } catch (error) {
+      console.error("Error canceling schedule:", error);
+      alert("Error canceling schedule");
+    }
+  }
+
+  async loadScheduleStatus() {
+    try {
+      const response = await fetch("/schedule/status");
+      if (response.ok) {
+        const status = await response.json();
+        this.updateScheduleStatus(status);
+      }
+    } catch (error) {
+      console.error("Error loading schedule status:", error);
+    }
+  }
+
+  updateScheduleStatus(status) {
+    const activeElement = document.getElementById("activeSchedule");
+    const nextElement = document.getElementById("nextSchedule");
+
+    if (status.active_schedule) {
+      const active = status.active_schedule;
+      const endTime = this.formatDateTimeDisplay(active.end_time);
+      activeElement.textContent = `${active.name} (ends ${endTime}) - ${active.frames_captured} frames`;
+      activeElement.className = "active-schedule";
+    } else {
+      activeElement.textContent = "None";
+      activeElement.className = "";
+    }
+
+    if (status.next_schedule) {
+      const next = status.next_schedule;
+      const startTime = this.formatDateTimeDisplay(next.start_time);
+      nextElement.textContent = `${next.name} (starts ${startTime})`;
+      nextElement.className = "next-schedule";
+    } else {
+      nextElement.textContent = "None";
+      nextElement.className = "";
+    }
+  }
+
+  startScheduleRefresh() {
+    // Refresh schedules and status every 30 seconds
+    this.scheduleRefreshInterval = setInterval(() => {
+      this.loadSchedules();
+      this.loadScheduleStatus();
+    }, 30000);
+  }
+
+  stopScheduleRefresh() {
+    if (this.scheduleRefreshInterval) {
+      clearInterval(this.scheduleRefreshInterval);
+      this.scheduleRefreshInterval = null;
+    }
   }
 }
 
@@ -1138,7 +1378,10 @@ class ROISelector {
   }
 }
 
+// Global reference for onclick handlers
+let cameraController;
+
 // Initialize the camera controller when page loads
 document.addEventListener("DOMContentLoaded", () => {
-  new CameraController();
+  cameraController = new CameraController();
 });

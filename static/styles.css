@@ -507,3 +507,278 @@ body {
         padding: 6px 12px;
     }
 }
+
+/* Scheduling Styles */
+.schedule-form {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.datetime-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.datetime-group .form-group {
+    margin-bottom: 0;
+}
+
+.schedule-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.schedule-status {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: #e9ecef;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+}
+
+.schedule-status h4 {
+    margin-bottom: 10px;
+    color: #2c3e50;
+    font-size: 16px;
+}
+
+.status-display {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-label {
+    font-weight: bold;
+    color: #6c757d;
+    min-width: 60px;
+}
+
+.active-schedule {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.next-schedule {
+    color: #17a2b8;
+    font-weight: bold;
+}
+
+.schedule-list {
+    margin-top: 25px;
+}
+
+.schedule-list h4 {
+    margin-bottom: 15px;
+    color: #2c3e50;
+    font-size: 16px;
+}
+
+.schedules-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: white;
+}
+
+.no-schedules {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.schedule-item {
+    padding: 15px;
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.3s;
+}
+
+.schedule-item:last-child {
+    border-bottom: none;
+}
+
+.schedule-item:hover {
+    background: #f8f9fa;
+}
+
+.schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.schedule-name {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.schedule-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.schedule-details {
+    margin-bottom: 10px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.schedule-time {
+    color: #495057;
+    margin-bottom: 4px;
+}
+
+.schedule-description {
+    color: #6c757d;
+    font-style: italic;
+    margin-bottom: 8px;
+}
+
+.schedule-info {
+    display: flex;
+    gap: 15px;
+    font-size: 13px;
+    color: #6c757d;
+}
+
+.schedule-actions {
+    text-align: right;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.3s;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn-small {
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+/* Schedule Status Colors */
+.status-pending {
+    border-left: 4px solid #007bff;
+}
+
+.status-pending .schedule-status {
+    background: #e3f2fd;
+    color: #0d47a1;
+}
+
+.status-active {
+    border-left: 4px solid #28a745;
+    background: #f8fff9;
+}
+
+.status-active .schedule-status {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-completed {
+    border-left: 4px solid #6c757d;
+    opacity: 0.8;
+}
+
+.status-completed .schedule-status {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.status-cancelled {
+    border-left: 4px solid #ffc107;
+    opacity: 0.7;
+}
+
+.status-cancelled .schedule-status {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-failed {
+    border-left: 4px solid #dc3545;
+    background: #fff5f5;
+}
+
+.status-failed .schedule-status {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Mobile responsiveness for scheduling */
+@media (max-width: 768px) {
+    .datetime-group {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .schedule-actions {
+        flex-direction: column;
+    }
+    
+    .schedule-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .schedule-info {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .status-display {
+        gap: 4px;
+    }
+    
+    .status-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+}
