@@ -185,6 +185,33 @@ class CameraManager:
         self.frame_height = height
         self.frame_type = img_type
 
+    def _update_roi_position(self):
+        """Update only the ROI position without full reconfiguration"""
+        if not self.camera or not self.camera_info:
+            return
+
+        # Calculate ROI dimensions
+        max_width = self.camera_info['MaxWidth']
+        max_height = self.camera_info['MaxHeight']
+
+        # Apply ROI selection
+        roi_start_x = int(self.current_settings.roi_x * max_width)
+        roi_start_y = int(self.current_settings.roi_y * max_height)
+
+        # Apply binning to ROI start position
+        if self.current_settings.binning > 1:
+            roi_start_x = roi_start_x // self.current_settings.binning
+            roi_start_y = roi_start_y // self.current_settings.binning
+
+        try:
+            # Update only the ROI start position
+            self.camera.set_roi_start_position(roi_start_x, roi_start_y)
+            print(f'Updated ROI position to ({roi_start_x},{roi_start_y})')
+        except Exception as e:
+            print(f'Warning: Failed to update ROI position: {e}')
+            # If this fails, fall back to full reconfiguration
+            self._configure_camera()
+
     def connect_camera(self):
         """Try to connect to camera"""
         try:
@@ -418,7 +445,7 @@ class CameraManager:
 
             # Create recording directory with timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            self.recording_directory = Path("captures") / timestamp
+            self.recording_directory = Path("/home/linus/zwo/captures") / timestamp
             self.recording_directory.mkdir(parents=True, exist_ok=True)
 
             self.is_recording = True
@@ -683,16 +710,36 @@ class CameraManager:
 
     def update_settings(self, settings: CameraSettings):
         """Update camera settings"""
-        was_capturing = self.is_capturing
+        old_settings = self.current_settings
+        
+        # Check if only ROI position changed
+        only_roi_position_changed = (
+            old_settings.exposure == settings.exposure and
+            old_settings.gain == settings.gain and
+            old_settings.binning == settings.binning and
+            old_settings.format == settings.format and
+            old_settings.bandwidth == settings.bandwidth and
+            old_settings.roi_width == settings.roi_width and
+            old_settings.roi_height == settings.roi_height and
+            (old_settings.roi_x != settings.roi_x or old_settings.roi_y != settings.roi_y)
+        )
+        
+        if only_roi_position_changed and self.camera and self.is_connected:
+            # Update only ROI position without restarting capture
+            self.current_settings = settings
+            self._update_roi_position()
+        else:
+            # Full reconfiguration needed
+            was_capturing = self.is_capturing
 
-        if was_capturing:
-            self.stop_capture()
+            if was_capturing:
+                self.stop_capture()
 
-        self.current_settings = settings
-        self._configure_camera()
+            self.current_settings = settings
+            self._configure_camera()
 
-        if was_capturing:
-            self.start_capture()
+            if was_capturing:
+                self.start_capture()
 
     def get_settings(self) -> CameraSettings:
         """Get current camera settings"""

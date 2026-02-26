@@ -16,6 +16,7 @@ import time
 from models import CameraSettings, ScheduledCapture, HistogramResponse
 from camera_manager import CameraManager
 from scheduler import CaptureScheduler
+from systemd import daemon
 
 
 # Global instances
@@ -34,6 +35,8 @@ async def lifespan(app: FastAPI):
         # Start scheduler and recover any active schedules
         scheduler.start()
         scheduler.recover_schedules()
+
+        daemon.notify(daemon.Notification.READY)
         
         print("Camera manager and scheduler initialized successfully")
     except Exception as e:
@@ -58,13 +61,13 @@ app = FastAPI(
 )
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="/home/linus/zwo/static"), name="static")
 
 
 @app.get("/")
 async def read_index():
     """Serve the main web interface"""
-    return FileResponse('static/index.html')
+    return FileResponse('/home/linus/zwo/static/index.html')
 
 
 # Camera Control Endpoints

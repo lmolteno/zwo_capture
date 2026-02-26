@@ -277,16 +277,16 @@ class ROISelector {
  * ROIManager - Manages ROI display and pixel coordinate calculation
  */
 class ROIManager {
-  constructor(cameraController) {
+  constructor(cameraController, roi) {
     this.cameraController = cameraController;
     this.roiSelector = null;
-    this.currentROI = { x: 0, y: 0, width: 1, height: 1 };
+    this.currentROI = roi || { x: 0, y: 0, width: 1, height: 1 };
   }
 
   init() {
     this.initROISelector();
     this.updateROISettingsPreview();
-    
+
     // Bind reset button
     document.getElementById("resetROIBtn").addEventListener("click", () => {
       this.roiSelector.resetROI();
@@ -298,7 +298,7 @@ class ROIManager {
       this.currentROI = roi;
       this.updateROIDisplay();
       this.cameraController.updateROI(roi);
-      
+
       // Update camera settings with new ROI if capturing
       if (this.cameraController.isCapturing) {
         this.cameraController.updateSettings();

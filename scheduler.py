@@ -20,7 +20,7 @@ class CaptureScheduler:
         self.camera_manager = camera_manager
         self.scheduler_thread = None
         self.scheduler_stop_event = threading.Event()
-        self.db_path = "camera_schedules.db"
+        self.db_path = "/home/linus/zwo/camera_schedules.db"
         
         # Initialize database
         self.init_database()

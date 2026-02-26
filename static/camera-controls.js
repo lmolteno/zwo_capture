@@ -14,36 +14,56 @@ class CameraController {
   async init() {
     this.bindEvents();
     await this.loadCurrentSettings();
+    if (this.isCapturing) {
+      this.startLivePreview();
+      this.startHistogramUpdates();
+    }
     this.startSettingsRefresh();
+
+    return this.currentROI;
   }
 
   bindEvents() {
     // Capture control buttons
-    document.getElementById("startBtn").addEventListener("click", () => this.startCapture());
-    document.getElementById("stopBtn").addEventListener("click", () => this.stopCapture());
+    document
+      .getElementById("startBtn")
+      .addEventListener("click", () => this.startCapture());
+    document
+      .getElementById("stopBtn")
+      .addEventListener("click", () => this.stopCapture());
 
     // Recording control buttons
-    document.getElementById("startRecordBtn").addEventListener("click", () => this.startRecording());
-    document.getElementById("stopRecordBtn").addEventListener("click", () => this.stopRecording());
+    document
+      .getElementById("startRecordBtn")
+      .addEventListener("click", () => this.startRecording());
+    document
+      .getElementById("stopRecordBtn")
+      .addEventListener("click", () => this.stopRecording());
 
     // Slider events
     document.getElementById("exposureSlider").addEventListener("input", (e) => {
       this.updateExposureDisplay(e.target.value);
     });
-    document.getElementById("exposureSlider").addEventListener("change", () => this.updateSettings());
+    document
+      .getElementById("exposureSlider")
+      .addEventListener("change", () => this.updateSettings());
 
     document.getElementById("gainSlider").addEventListener("input", (e) => {
       this.updateGainDisplay(e.target.value);
     });
-    document.getElementById("gainSlider").addEventListener("change", () => this.updateSettings());
+    document
+      .getElementById("gainSlider")
+      .addEventListener("change", () => this.updateSettings());
 
     // Input field events
-    document.getElementById("exposureInput").addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        this.parseExposureInput();
-        this.updateSettings();
-      }
-    });
+    document
+      .getElementById("exposureInput")
+      .addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          this.parseExposureInput();
+          this.updateSettings();
+        }
+      });
     document.getElementById("exposureInput").addEventListener("blur", () => {
       this.parseExposureInput();
       this.updateSettings();
@@ -61,7 +81,12 @@ class CameraController {
     });
 
     // Other settings change events
-    const settingsInputs = ["binning", "format", "bandwidth", "maxRecordingFps"];
+    const settingsInputs = [
+      "binning",
+      "format",
+      "bandwidth",
+      "maxRecordingFps",
+    ];
     settingsInputs.forEach((id) => {
       const element = document.getElementById(id);
       element.addEventListener("change", () => this.updateSettings());
@@ -79,9 +104,24 @@ class CameraController {
       const statusResponse = await fetch("/camera/status");
       const status = await statusResponse.json();
       this.cameraModel = status.camera_model;
-      this.updateUI(status.is_capturing, status.is_connected, status.camera_model);
+      this.isCapturing = status.is_capturing;
+      this.updateUI(
+        status.is_capturing,
+        status.is_connected,
+        status.camera_model,
+      );
       this.updateFPS(status.current_fps);
-      this.updateRecordingStatus(status.is_recording, status.frames_recorded, status.recording_directory);
+      this.updateRecordingStatus(
+        status.is_recording,
+        status.frames_recorded,
+        status.recording_directory,
+      );
+      this.currentROI = {
+        x: settings.roi_x,
+        y: settings.roi_y,
+        width: settings.roi_width,
+        height: settings.roi_height,
+      };
     } catch (error) {
       console.error("Error loading settings:", error);
     }
@@ -96,7 +136,8 @@ class CameraController {
     document.getElementById("binning").value = settings.binning;
     document.getElementById("format").value = settings.format;
     document.getElementById("bandwidth").value = settings.bandwidth;
-    document.getElementById("maxRecordingFps").value = settings.max_recording_fps || 30;
+    document.getElementById("maxRecordingFps").value =
+      settings.max_recording_fps || 30;
   }
 
   // Logarithmic exposure conversion functions
@@ -139,7 +180,10 @@ class CameraController {
   }
 
   parseExposureInput() {
-    const input = document.getElementById("exposureInput").value.trim().toLowerCase();
+    const input = document
+      .getElementById("exposureInput")
+      .value.trim()
+      .toLowerCase();
     let exposureUs = 0;
 
     // Parse different formats: "10ms", "500μs", "2.5s", "1000" (assumes μs)
@@ -170,7 +214,9 @@ class CameraController {
       this.setExposureFromMicroseconds(exposureUs);
     } else {
       // Invalid input, revert to current slider value
-      this.updateExposureDisplay(document.getElementById("exposureSlider").value);
+      this.updateExposureDisplay(
+        document.getElementById("exposureSlider").value,
+      );
     }
   }
 
@@ -309,7 +355,9 @@ class CameraController {
 
   async startRecording() {
     try {
-      const response = await fetch("/camera/start_recording", { method: "POST" });
+      const response = await fetch("/camera/start_recording", {
+        method: "POST",
+      });
 
       if (response.ok) {
         this.isRecording = true;
@@ -325,7 +373,9 @@ class CameraController {
 
   async stopRecording() {
     try {
-      const response = await fetch("/camera/stop_recording", { method: "POST" });
+      const response = await fetch("/camera/stop_recording", {
+        method: "POST",
+      });
 
       if (response.ok) {
         this.isRecording = false;
@@ -339,7 +389,11 @@ class CameraController {
     }
   }
 
-  updateRecordingStatus(isRecording, framesRecorded = 0, recordingDirectory = null) {
+  updateRecordingStatus(
+    isRecording,
+    framesRecorded = 0,
+    recordingDirectory = null,
+  ) {
     const recordingInfo = document.getElementById("recordingInfo");
     const recordingStatus = document.getElementById("recordingStatus");
 
@@ -357,7 +411,7 @@ class CameraController {
   startLivePreview() {
     const preview = document.getElementById("cameraPreview");
     preview.src = "/camera/stream?" + new Date().getTime();
-    
+
     // Update ROI settings panel with current stream
     const roiImage = document.getElementById("roiSettingsImage");
     roiImage.src = "/camera/stream?" + new Date().getTime();
@@ -365,7 +419,8 @@ class CameraController {
 
   stopLivePreview() {
     const preview = document.getElementById("cameraPreview");
-    preview.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjMwMCIgeT0iMjAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM2Yzc1N2QiPkNhbWVyYSBQcmV2aWV3PC90ZXh0Pjwvc3ZnPg==";
+    preview.src =
+      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjMwMCIgeT0iMjAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM2Yzc1N2QiPkNhbWVyYSBQcmV2aWV3PC90ZXh0Pjwvc3ZnPg==";
   }
 
   startHistogramUpdates() {
@@ -405,13 +460,40 @@ class CameraController {
 
     if (data.mono_histogram) {
       // Mono histogram
-      this.drawSingleHistogram(ctx, data.mono_histogram, width, height, "#666666");
+      this.drawSingleHistogram(
+        ctx,
+        data.mono_histogram,
+        width,
+        height,
+        "#666666",
+      );
       this.updateLegend([{ color: "#666666", label: "Mono" }]);
     } else if (data.r_histogram && data.g_histogram && data.b_histogram) {
       // RGB histogram
-      this.drawSingleHistogram(ctx, data.r_histogram, width, height, "#ff0000", 0.7);
-      this.drawSingleHistogram(ctx, data.g_histogram, width, height, "#00ff00", 0.7);
-      this.drawSingleHistogram(ctx, data.b_histogram, width, height, "#0000ff", 0.7);
+      this.drawSingleHistogram(
+        ctx,
+        data.r_histogram,
+        width,
+        height,
+        "#ff0000",
+        0.7,
+      );
+      this.drawSingleHistogram(
+        ctx,
+        data.g_histogram,
+        width,
+        height,
+        "#00ff00",
+        0.7,
+      );
+      this.drawSingleHistogram(
+        ctx,
+        data.b_histogram,
+        width,
+        height,
+        "#0000ff",
+        0.7,
+      );
       this.updateLegend([
         { color: "#ff0000", label: "Red" },
         { color: "#00ff00", label: "Green" },
@@ -472,7 +554,9 @@ class CameraController {
 
   async updateSettings() {
     const settings = {
-      exposure: this.sliderToExposure(document.getElementById("exposureSlider").value),
+      exposure: this.sliderToExposure(
+        document.getElementById("exposureSlider").value,
+      ),
       gain: this.sliderToGain(document.getElementById("gainSlider").value),
       binning: parseInt(document.getElementById("binning").value),
       format: document.getElementById("format").value,
@@ -481,7 +565,9 @@ class CameraController {
       roi_y: this.currentROI.y,
       roi_width: this.currentROI.width,
       roi_height: this.currentROI.height,
-      max_recording_fps: parseFloat(document.getElementById("maxRecordingFps").value),
+      max_recording_fps: parseFloat(
+        document.getElementById("maxRecordingFps").value,
+      ),
     };
 
     try {
@@ -524,9 +610,17 @@ class CameraController {
         if (statusResponse.ok) {
           const status = await statusResponse.json();
           this.cameraModel = status.camera_model;
-          this.updateUI(status.is_capturing, status.is_connected, status.camera_model);
+          this.updateUI(
+            status.is_capturing,
+            status.is_connected,
+            status.camera_model,
+          );
           this.updateFPS(status.current_fps);
-          this.updateRecordingStatus(status.is_recording, status.frames_recorded, status.recording_directory);
+          this.updateRecordingStatus(
+            status.is_recording,
+            status.frames_recorded,
+            status.recording_directory,
+          );
         }
       } catch (error) {
         console.error("Error refreshing settings:", error);

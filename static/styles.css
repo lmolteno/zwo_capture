@@ -10,12 +10,496 @@ body {
     background: #f5f5f5;
     color: #333;
     line-height: 1.6;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
+}
+
+/* Dark mode styles using browser preference and manual toggle */
+@media (prefers-color-scheme: dark) {
+    body:not(.light-mode) {
+        background: #1a1a1a;
+        color: #e0e0e0;
+    }
+
+    body:not(.light-mode) .preview-section,
+    body:not(.light-mode) .controls-section {
+        background: #2d2d2d;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    body:not(.light-mode) .header h1 {
+        color: #e0e0e0;
+    }
+
+    body:not(.light-mode) .camera-info {
+        background: #3d3d3d;
+        border-color: #555;
+        color: #e0e0e0;
+    }
+
+    body:not(.light-mode) .camera-info.connected {
+        background: #1e3a5f;
+        color: #64b5f6;
+        border-color: #1976d2;
+    }
+
+    body:not(.light-mode) .fps-display {
+        background: #1e3a5f;
+        color: #64b5f6;
+        border-color: #1976d2;
+    }
+
+    body:not(.light-mode) .status.capturing {
+        background: #1b4332;
+        color: #40916c;
+        border-color: #2d6a4f;
+    }
+
+    body:not(.light-mode) .status.stopped {
+        background: #641e16;
+        color: #e74c3c;
+        border-color: #922b21;
+    }
+
+    body:not(.light-mode) .status.disconnected {
+        background: #7d6608;
+        color: #f39c12;
+        border-color: #b7950b;
+    }
+
+    body:not(.light-mode) #cameraPreview {
+        border-color: #555;
+        background: #2d2d2d;
+    }
+
+    body:not(.light-mode) .form-group input,
+    body:not(.light-mode) .form-group select {
+        background: #3d3d3d;
+        border-color: #555;
+        color: #e0e0e0;
+    }
+
+    body:not(.light-mode) .form-group input:focus,
+    body:not(.light-mode) .form-group select:focus {
+        border-color: #64b5f6;
+    }
+
+    body:not(.light-mode) .slider {
+        background: #555;
+    }
+
+    body:not(.light-mode) .slider-value-input {
+        background: #3d3d3d;
+        border-color: #555;
+        color: #e0e0e0;
+    }
+
+    body:not(.light-mode) .slider-value-input:focus {
+        background: #4d4d4d;
+        border-color: #64b5f6;
+    }
+
+    body:not(.light-mode) .settings-group h3 {
+        color: #e0e0e0;
+        border-bottom-color: #64b5f6;
+    }
+
+    body:not(.light-mode) .form-group label {
+        color: #b0b0b0;
+    }
+
+    body:not(.light-mode) .slider-labels {
+        color: #888;
+    }
+
+    body:not(.light-mode) .histogram-container h3 {
+        color: #e0e0e0;
+    }
+
+    body:not(.light-mode) #histogramCanvas {
+        border-color: #555;
+        background: #2d2d2d;
+    }
+
+    body:not(.light-mode) .recording-status {
+        background: #3d3d3d;
+        border-color: #555;
+        color: #e0e0e0;
+    }
+
+    body:not(.light-mode) .recording-status.recording {
+        background: #1b4332;
+        color: #40916c;
+        border-color: #2d6a4f;
+    }
+
+    body:not(.light-mode) .roi-mini-display {
+        border-color: #555;
+        background: #2d2d2d;
+    }
+
+    body:not(.light-mode) .roi-coord-item {
+        background: #3d3d3d;
+        border-color: #555;
+    }
+
+    body:not(.light-mode) .roi-label {
+        color: #888;
+    }
+
+    body:not(.light-mode) .roi-coord-item span:last-child {
+        color: #e0e0e0;
+    }
+
+    body:not(.light-mode) .schedule-form {
+        background: #3d3d3d;
+        border-color: #555;
+    }
+
+    body:not(.light-mode) .schedule-status {
+        background: #2a2a2a;
+        border-color: #555;
+    }
+
+    body:not(.light-mode) .schedule-status h4 {
+        color: #e0e0e0;
+    }
+
+    body:not(.light-mode) .schedules-container {
+        background: #2d2d2d;
+        border-color: #555;
+    }
+
+    body:not(.light-mode) .schedule-item {
+        border-bottom-color: #444;
+    }
+
+    body:not(.light-mode) .schedule-item:hover {
+        background: #3d3d3d;
+    }
+
+    body:not(.light-mode) .schedule-name {
+        color: #e0e0e0;
+    }
+
+    body:not(.light-mode) .no-schedules {
+        color: #888;
+    }
+
+    body:not(.light-mode) .collapse-btn {
+        color: #e0e0e0;
+        border-bottom-color: #64b5f6;
+    }
+
+    body:not(.light-mode) .dark-mode-toggle {
+        border-color: #64b5f6;
+        color: #64b5f6;
+    }
+
+    body:not(.light-mode) .dark-mode-toggle:hover {
+        background: #64b5f6;
+        color: #1a1a1a;
+    }
+
+    body:not(.light-mode) .schedule-time,
+    body:not(.light-mode) .schedule-description,
+    body:not(.light-mode) .schedule-info,
+    body:not(.light-mode) .status-label {
+        color: #b0b0b0;
+    }
+
+    body:not(.light-mode) #fpsValue {
+        color: #64b5f6;
+    }
+}
+
+/* Manual dark mode override */
+body.dark-mode {
+    background: #1a1a1a;
+    color: #e0e0e0;
+}
+
+body.dark-mode .preview-section,
+body.dark-mode .controls-section {
+    background: #2d2d2d;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .header h1 {
+    color: #e0e0e0;
+}
+
+body.dark-mode .camera-info {
+    background: #3d3d3d;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .camera-info.connected {
+    background: #1e3a5f;
+    color: #64b5f6;
+    border-color: #1976d2;
+}
+
+body.dark-mode .fps-display {
+    background: #1e3a5f;
+    color: #64b5f6;
+}
+
+body.dark-mode .status.capturing {
+    background: #1b4332;
+    color: #40916c;
+    border-color: #2d6a4f;
+}
+
+body.dark-mode .status.stopped {
+    background: #641e16;
+    color: #e74c3c;
+    border-color: #922b21;
+}
+
+body.dark-mode .status.disconnected {
+    background: #7d6608;
+    color: #f39c12;
+    border-color: #b7950b;
+}
+
+body.dark-mode #cameraPreview {
+    border-color: #555;
+    background: #2d2d2d;
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group select {
+    background: #3d3d3d;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group select:focus {
+    border-color: #64b5f6;
+}
+
+body.dark-mode .slider {
+    background: #555;
+}
+
+body.dark-mode .slider-value-input {
+    background: #3d3d3d;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .slider-value-input:focus {
+    background: #4d4d4d;
+    border-color: #64b5f6;
+}
+
+body.dark-mode .settings-group h3 {
+    color: #e0e0e0;
+    border-bottom-color: #64b5f6;
+}
+
+body.dark-mode .form-group label {
+    color: #b0b0b0;
+}
+
+body.dark-mode .slider-labels {
+    color: #888;
+}
+
+body.dark-mode .histogram-container h3 {
+    color: #e0e0e0;
+}
+
+body.dark-mode #histogramCanvas {
+    border-color: #555;
+    background: #2d2d2d;
+}
+
+body.dark-mode .recording-status {
+    background: #3d3d3d;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .recording-status.recording {
+    background: #1b4332;
+    color: #40916c;
+    border-color: #2d6a4f;
+}
+
+body.dark-mode .roi-mini-display {
+    border-color: #555;
+    background: #2d2d2d;
+}
+
+body.dark-mode .roi-coord-item {
+    background: #3d3d3d;
+    border-color: #555;
+}
+
+body.dark-mode .roi-label {
+    color: #888;
+}
+
+body.dark-mode .roi-coord-item span:last-child {
+    color: #e0e0e0;
+}
+
+body.dark-mode .schedule-form {
+    background: #3d3d3d;
+    border-color: #555;
+}
+
+body.dark-mode .schedule-status {
+    background: #2a2a2a;
+    border-color: #555;
+}
+
+body.dark-mode .schedule-status h4 {
+    color: #e0e0e0;
+}
+
+body.dark-mode .schedules-container {
+    background: #2d2d2d;
+    border-color: #555;
+}
+
+body.dark-mode .schedule-item {
+    border-bottom-color: #444;
+}
+
+body.dark-mode .schedule-item:hover {
+    background: #3d3d3d;
+}
+
+body.dark-mode .schedule-name {
+    color: #e0e0e0;
+}
+
+body.dark-mode .no-schedules {
+    color: #888;
+}
+
+body.dark-mode .collapse-btn {
+    color: #e0e0e0;
+    border-bottom-color: #64b5f6;
+}
+
+body.dark-mode .dark-mode-toggle {
+    border-color: #64b5f6;
+    color: #64b5f6;
+}
+
+body.dark-mode .dark-mode-toggle:hover {
+    background: #64b5f6;
+    color: #1a1a1a;
+}
+
+body.dark-mode .schedule-time,
+body.dark-mode .schedule-description,
+body.dark-mode .schedule-info,
+body.dark-mode .status-label {
+    color: #b0b0b0;
+}
+
+body.dark-mode #fpsValue {
+    color: #64b5f6;
 }
 
 .container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.dark-mode-toggle {
+    background: none;
+    border: 2px solid #3498db;
+    color: #3498db;
+    font-size: 24px;
+    padding: 8px 12px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dark-mode-toggle:hover {
+    background: #3498db;
+    color: white;
+    transform: scale(1.1);
+}
+
+body.dark-mode .dark-mode-toggle {
+    border-color: #64b5f6;
+    color: #64b5f6;
+}
+
+body.dark-mode .dark-mode-toggle:hover {
+    background: #64b5f6;
+    color: #1a1a1a;
+}
+
+.collapsible {
+    margin-bottom: 20px;
+}
+
+.collapse-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 15px 0;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+}
+
+body.dark-mode .collapse-btn {
+    color: #e0e0e0;
+    border-bottom-color: #64b5f6;
+}
+
+.collapse-icon {
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.collapsible.collapsed .collapse-icon {
+    transform: rotate(-90deg);
+}
+
+.collapsible-content {
+    overflow: hidden;
+    transition:
+        max-height 0.3s ease,
+        opacity 0.3s ease;
+    max-height: 1000px;
+    opacity: 1;
+}
+
+.collapsible.collapsed .collapsible-content {
+    max-height: 0;
+    opacity: 0;
 }
 
 .header {
@@ -57,10 +541,10 @@ body {
 }
 
 .status {
-    padding: 10px 20px;
+    padding: 8px 16px;
     border-radius: 5px;
-    margin-bottom: 20px;
     font-weight: bold;
+    font-size: 14px;
 }
 
 .status.capturing {
@@ -83,7 +567,6 @@ body {
 
 .fps-display {
     text-align: center;
-    margin-top: 10px;
     padding: 8px 16px;
     background: #e3f2fd;
     color: #1976d2;
@@ -91,11 +574,11 @@ body {
     font-weight: bold;
     font-size: 14px;
     display: inline-block;
+    border: 1px solid #bbdefb;
 }
 
 #fpsValue {
     color: #0d47a1;
-    font-size: 16px;
 }
 
 .main-content {
@@ -473,38 +956,109 @@ body {
     background: #545b62;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .main-content {
         grid-template-columns: 1fr;
+        gap: 15px;
     }
-    
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    .header-top {
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .header-top h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+
+    .main-content {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
     .status-panel {
         flex-direction: column;
         gap: 10px;
     }
 
-    .capture-controls {
+    .capture-controls,
+    .recording-controls {
         flex-direction: column;
         align-items: center;
+        gap: 10px;
     }
 
     .btn {
-        width: 200px;
+        width: 100%;
+        max-width: 280px;
     }
 
     .roi-coords {
         flex-direction: column;
         gap: 10px;
     }
-    
+
     .camera-info {
         font-size: 12px;
         padding: 6px 12px;
     }
-    
+
     .fps-display {
         font-size: 12px;
         padding: 6px 12px;
+    }
+
+    .settings-group {
+        margin-bottom: 15px;
+    }
+
+    .controls-section {
+        padding: 15px;
+    }
+
+    .preview-section {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 10px;
+    }
+
+    .header-top h1 {
+        font-size: 20px;
+    }
+
+    .dark-mode-toggle {
+        font-size: 20px;
+        width: 40px;
+        height: 40px;
+        padding: 6px;
+    }
+
+    .btn {
+        font-size: 14px;
+        padding: 10px 20px;
+    }
+
+    .slider-value-input {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .form-group input,
+    .form-group select {
+        font-size: 14px;
+        padding: 8px;
     }
 }
 
@@ -756,29 +1310,34 @@ body {
         grid-template-columns: 1fr;
         gap: 10px;
     }
-    
+
     .schedule-actions {
         flex-direction: column;
+        gap: 10px;
     }
-    
+
+    .schedule-actions .btn {
+        width: 100%;
+    }
+
     .schedule-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 5px;
+        gap: 8px;
     }
-    
+
     .schedule-info {
         flex-direction: column;
-        gap: 4px;
+        gap: 6px;
     }
-    
+
     .status-display {
-        gap: 4px;
+        gap: 6px;
     }
-    
+
     .status-item {
         flex-direction: column;
         align-items: flex-start;
-        gap: 2px;
+        gap: 4px;
     }
 }

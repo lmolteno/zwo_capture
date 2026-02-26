@@ -24,10 +24,10 @@ class CameraApplication {
 
       // Initialize core camera controller
       this.cameraController = new CameraController();
-      await this.cameraController.init();
+      const roi = await this.cameraController.init();
 
       // Initialize ROI manager
-      this.roiManager = new ROIManager(this.cameraController);
+      this.roiManager = new ROIManager(this.cameraController, roi);
       this.roiManager.init();
 
       // Initialize scheduler UI
@@ -46,10 +46,11 @@ class CameraApplication {
 
       // Perform initial data load
       await this.loadInitialData();
-
     } catch (error) {
       console.error("Failed to initialize Camera Application:", error);
-      this.showError("Failed to initialize the camera application. Please refresh the page.");
+      this.showError(
+        "Failed to initialize the camera application. Please refresh the page.",
+      );
     }
   }
 
@@ -74,7 +75,7 @@ class CameraApplication {
     const promises = [
       this.cameraController.loadCurrentSettings(),
       this.schedulerUI.loadSchedules(),
-      this.schedulerUI.loadScheduleStatus()
+      this.schedulerUI.loadScheduleStatus(),
     ];
 
     try {
@@ -86,7 +87,7 @@ class CameraApplication {
 
   showError(message) {
     // Create a simple error display
-    const errorDiv = document.createElement('div');
+    const errorDiv = document.createElement("div");
     errorDiv.style.cssText = `
       position: fixed;
       top: 20px;
@@ -168,5 +169,5 @@ window.CameraApp = {
   getInstance: () => app,
   getCameraController: () => cameraController,
   getROIManager: () => roiManager,
-  getSchedulerUI: () => schedulerUI
+  getSchedulerUI: () => schedulerUI,
 };
